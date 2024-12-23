@@ -1,4 +1,4 @@
-<img src="logo.png" alt="Fileofy Logo" width="100" height="100">
+<img src="/readme-files/logo.png" alt="Fileofy Logo" width="100" height="100">
 
 # Fileofy
 
