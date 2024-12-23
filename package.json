@@ -1,13 +1,30 @@
 {
+    "name": "fileofy",
+    "version": "1.0.0",
+    "description": "AI-powered file modification library using Gemini",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
     "type": "module",
+    "files": [
+        "dist"
+    ],
     "scripts": {
-        "test": "jest",
-        "build": "tsc"
+        "build": "tsc",
+        "prepublishOnly": "npm run build",
+        "test": "jest"
+    },
+    "keywords": ["ai", "file-modification", "gemini", "typescript"],
+    "author": "Aditya Shankar",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/river-berlin/fileofy.git"
     },
     "dependencies": {
         "@google/generative-ai": "^0.21.0",
         "dotenv": "^16.4.7",
-        "jest": "^29.7.0"
+        "jest": "^29.7.0",
+        "mock-fs": "^5.4.1"
     },
     "devDependencies": {
         "@types/jest": "^29.5.14",
@@ -30,7 +47,11 @@
             "^.+\\.tsx?$": [
                 "ts-jest",
                 {
-                    "useESM": true
+                    "useESM": true,
+                    "tsconfig": {
+                        "target": "es2022",
+                        "module": "nodenext"
+                    }
                 }
             ]
         }

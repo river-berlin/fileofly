@@ -1,169 +1,139 @@
-// Import mocks
-import {
-  mockFs,
-  mockGenerateContent
-} from './mocks/setupMocks.js';
+// Import mock-fs instead of custom mock
+import mock from 'mock-fs';
+import fs from 'fs';
+import { createMockGenerativeAI } from './mocks/setupMocks.ts';
+import { jest }  from '@jest/globals';
 
-// Move imports after the mocks
-import { applyFileModification } from '../src/index';
-import { jest } from '@jest/globals';
-import dotenv from 'dotenv';
+// Declare variables that will hold the imported modules
+let applyFileModification: any;
+let dotenv: any;
 
-// Load environment variables
-dotenv.config();
+// Load environment variables and imports before tests run
+beforeAll(async () => {
+  ({ applyFileModification } = await import('../src/index.ts'));
+  dotenv = await import('dotenv');
 
-// Ensure API_KEY exists
-if (!process.env.GEMINI_API_KEY) {
-  throw new Error('GEMINI_API_KEY is not set in .env file');
-}
+  // Load environment variables
+  dotenv.config();
+
+  // Verify API key is loaded
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY is not set in .env file');
+  }
+});
 
 describe('File Modification Tests', () => {
-  // Add API key check before all tests
-  beforeAll(() => {
-    // Verify API key is loaded
-    expect(process.env.GEMINI_API_KEY).toBeDefined();
-  });
+  let mockGenAI: any;
 
   beforeEach(() => {
-    // Reset all mocks before each test
     jest.clearAllMocks();
     
-    // Set up default resolved values
-    mockFs.promises.readFile.mockResolvedValue('');
-    mockFs.promises.writeFile.mockResolvedValue(undefined);
-    mockFs.promises.unlink.mockResolvedValue(undefined);
-    
-    // Reset mockGenerateContent for each test
-    mockGenerateContent.mockReset();
+    mock({
+      'test.txt': ''
+    });
+  });
+
+  afterEach(() => {
+    // Restore real filesystem after each test
+    mock.restore();
   });
 
   test('should create a new file', async () => {
-    // Set up the mock response
-    const mockResponse = {
-      response: {
-        text: () => JSON.stringify({
-          filePath: 'test.txt',
-          operation: 'create',
-          content: 'Hello World',
-          startLine: 1,
-          endLine: 1
-        })
-      }
-    };
-
-    // Configure the mock to return our response
-    mockGenerateContent.mockResolvedValueOnce(mockResponse);
-
-    // Add some debug logging
-    console.log('Before operation - mockGenerateContent setup:', mockGenerateContent);
+    const mockResponse = JSON.stringify({
+      filePath: 'test.txt',
+      operation: 'create',
+      content: 'Hello World',
+      startLine: 1,
+      endLine: 1
+    });
     
-    await applyFileModification('Create a new file test.txt with content "Hello World"');
+    mockGenAI = createMockGenerativeAI(mockResponse);
+    const mockGenerateContent = mockGenAI.getGenerativeModel().generateContent;
     
-    // Verify the mock was called
-    expect(mockGenerateContent).toHaveBeenCalledTimes(1);
-    expect(mockGenerateContent).toHaveBeenCalledWith(
-      'Extract the file modification needed from this text: "Create a new file test.txt with content "Hello World""'
+    await applyFileModification(
+      'Create a new file test.txt with content "Hello World"',
+      mockGenAI
     );
-
-    // Verify the file operation
-    expect(mockFs.promises.writeFile).toHaveBeenCalledWith('test.txt', 'Hello World');
+    
+    expect(mockGenerateContent).toHaveBeenCalledTimes(1);
+    
+    const content = await fs.promises.readFile('test.txt', 'utf8');
+    expect(content).toBe('Hello World');
   });
 
   test('should update specific lines in a file', async () => {
-    const existingContent = 'Line 1\nLine 2\nLine 3\nLine 4\nLine 5';
-    mockFs.promises.readFile.mockResolvedValue(existingContent);
+    // Setup initial file content
+    mock({
+      'test.txt': 'Line 1\nLine 2\nLine 3\nLine 4\nLine 5'
+    });
 
-    const mockResponse = {
-      response: {
-        text: () => JSON.stringify({
-          filePath: 'test.txt',
-          operation: 'update',
-          content: 'New Content',
-          startLine: 2,
-          endLine: 4
-        })
-      }
-    };
+    const mockResponse = JSON.stringify({
+      filePath: 'test.txt',
+      operation: 'update',
+      content: 'New Content',
+      startLine: 2,
+      endLine: 4
+    });
 
-    mockGenerateContent.mockResolvedValueOnce(mockResponse);
+    mockGenAI = createMockGenerativeAI(mockResponse);
 
-    await applyFileModification('Update lines 2-4 in test.txt with "New Content"');
+    await applyFileModification('Update lines 2-4 in test.txt with "New Content"', mockGenAI);
 
-    expect(mockFs.promises.readFile).toHaveBeenCalledWith('test.txt', 'utf8');
-    expect(mockFs.promises.writeFile).toHaveBeenCalledWith(
-      'test.txt',
-      'Line 1\nNew Content\nLine 5'
-    );
+    const content = await fs.promises.readFile('test.txt', 'utf8');
+    expect(content).toBe('Line 1\nNew Content\nLine 5');
   });
 
   test('should update the last line using -1', async () => {
-    const existingContent = 'Line 1\nLine 2\nLine 3';
-    mockFs.promises.readFile.mockResolvedValue(existingContent);
+    // Setup initial file content
+    mock({
+      'test.txt': 'Line 1\nLine 2\nLine 3'
+    });
 
-    const mockResponse = {
-      response: {
-        text: () => JSON.stringify({
-          filePath: 'test.txt',
-          operation: 'update',
-          content: 'Final Line',
-          startLine: -1,
-          endLine: -1
-        })
-      }
-    };
+    const mockResponse = JSON.stringify({
+      filePath: 'test.txt',
+      operation: 'update',
+      content: 'Final Line',
+      startLine: -1,
+      endLine: -1
+    });
 
-    mockGenerateContent.mockResolvedValueOnce(mockResponse);
+    mockGenAI = createMockGenerativeAI(mockResponse);
 
-    await applyFileModification('Update the last line in test.txt with "Final Line"');
+    await applyFileModification('Update the last line in test.txt with "Final Line"', mockGenAI);
 
-    expect(mockFs.promises.readFile).toHaveBeenCalledWith('test.txt', 'utf8');
-    expect(mockFs.promises.writeFile).toHaveBeenCalledWith(
-      'test.txt',
-      'Line 1\nLine 2\nFinal Line'
-    );
+    const content = await fs.promises.readFile('test.txt', 'utf8');
+    expect(content).toBe('Line 1\nLine 2\nFinal Line');
   });
 
   test('should delete a file', async () => {
-    const mockResponse = {
-      response: {
-        text: () => JSON.stringify({
-          filePath: 'test.txt',
-          operation: 'delete',
-          content: '',
-          startLine: 1,
-          endLine: 1
-        })
-      }
-    };
+    const mockResponse = JSON.stringify({
+      filePath: 'test.txt',
+      operation: 'delete',
+      content: '',
+      startLine: 1,
+      endLine: 1
+    });
 
-    mockGenerateContent.mockResolvedValueOnce(mockResponse);
+    mockGenAI = createMockGenerativeAI(mockResponse);
 
-    await applyFileModification('Delete the file test.txt');
+    await applyFileModification('Delete the file test.txt', mockGenAI);
 
-    expect(mockFs.promises.unlink).toHaveBeenCalledWith('test.txt');
+    expect(fs.existsSync('test.txt')).toBe(false);
   });
 
   test('should throw error for create operation not starting at line 1', async () => {
-    const mockResponse = {
-      response: {
-        text: () => JSON.stringify({
-          filePath: 'test.txt',
-          operation: 'create',
-          content: 'Hello World',
-          startLine: 2,
-          endLine: 2
-        })
-      }
-    };
+    const mockResponse = JSON.stringify({
+      filePath: 'test.txt',
+      operation: 'create',
+      content: 'Hello World',
+      startLine: 2,
+      endLine: 2
+    });
 
-    mockGenerateContent.mockResolvedValueOnce(mockResponse);
+    mockGenAI = createMockGenerativeAI(mockResponse);
 
-    const consoleSpy = jest.spyOn(console, 'error');
-    await applyFileModification('Create a file starting at line 2');
-
-    expect(consoleSpy).toHaveBeenCalledWith(
-      'Error modifying test.txt:',
-      expect.any(Error)
-    );
+    await expect(
+      applyFileModification('Create a file starting at line 2', mockGenAI)
+    ).rejects.toThrow('Create operation must start at line 1');
   });
 }); 

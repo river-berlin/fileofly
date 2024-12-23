@@ -1,16 +1,28 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from 'dotenv';
-import { fileModificationSchema } from './schemas/fileModification.js';
-import { executeFileModification } from './utils/fileOperations.js';
+import { fileModificationSchema } from './schemas/fileModification';
+import { executeFileModification } from './utils/fileOperations';
 // Load environment variables before using them
 dotenv.config();
-export async function applyFileModification(text) {
-    // Check for required environment variable
-    if (!process.env.GEMINI_API_KEY) {
+/**
+ * Applies file modifications based on text input using Google's Generative AI.
+ *
+ * @param text - The text input containing file modification instructions
+ * @param customGenAI - Optional custom GoogleGenerativeAI instance. If not provided,
+ *                      creates a new instance using the GEMINI_API_KEY environment variable,
+ *                      mostly used for testing
+ *
+ * @throws {Error} If GEMINI_API_KEY is not set when no custom GenAI is provided
+ * @throws {Error} If file modification execution fails
+ * @returns {Promise<void>}
+ */
+export async function applyFileModification(text, customGenAI) {
+    // Check for required environment variable if no custom GenAI is provided
+    if (!customGenAI && !process.env.GEMINI_API_KEY) {
         throw new Error('GEMINI_API_KEY environment variable is not set');
     }
-    // Initialize Gemini API inside the function
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    // Use provided GenAI instance or create a new one
+    const genAI = customGenAI || new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({
         model: "gemini-2.0-flash-exp",
         generationConfig: {
@@ -20,10 +32,6 @@ export async function applyFileModification(text) {
     });
     const result = await model.generateContent(`Extract the file modification needed from this text: "${text}"`);
     const modification = JSON.parse(result.response.text());
-    try {
-        await executeFileModification(modification);
-    }
-    catch (error) {
-        console.error(`Error modifying ${modification?.filePath || ''}:`, error);
-    }
+    await executeFileModification(modification);
 }
+//# sourceMappingURL=index.js.map
