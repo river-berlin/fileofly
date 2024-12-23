@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="/readme-files/logo.png" alt="Fileofy Logo" width="100" height="100">
+</p>
+
 # Fileofy
 
 A TypeScript library that uses Google's Gemini AI to interpret text instructions and perform file modifications. The library can create, update, or delete files based on natural language input.
