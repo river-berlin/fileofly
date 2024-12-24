@@ -58,27 +58,20 @@ jobs:
 
     - name: Generate coverage badges
       if: github.ref == 'refs/heads/main' && matrix.node-version == '20.x'
-      # Remove dependency on previous step success
       continue-on-error: true
       run: |
-        echo "Condition passed - running coverage badge generation"
-        # Only proceed if coverage data exists
         if [ -f coverage/coverage-summary.json ]; then
-          npm install -g jest-coverage-badges
-          # Generate standard coverage badges
-          jest-coverage-badges --output ./coverage/badges
+          # Get total coverage percentage (using lines as the main metric)
+          COVERAGE=$(cat coverage/coverage-summary.json | jq -r ".total.lines.pct")
           
-          # Generate failing badges for low coverage
-          for metric in statements branches functions lines; do
-            coverage=$(cat coverage/coverage-summary.json | jq -r ".total.${metric}.pct")
-            if (( $(echo "$coverage < 80" | bc -l) )); then
-              # Create red badge for failing metrics
-              curl "https://img.shields.io/badge/${metric}-${coverage}%25-red" > "./coverage/badges/badge-${metric}-failing.svg"
-            else
-              # Create green badge for passing metrics
-              curl "https://img.shields.io/badge/${metric}-${coverage}%25-brightgreen" > "./coverage/badges/badge-${metric}-passing.svg"
-            fi
-          done
+          # Create badge based on coverage threshold
+          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+            # Create red badge for failing coverage
+            curl "https://img.shields.io/badge/coverage-${COVERAGE}%25-red" > "./coverage/badges/coverage.svg"
+          else
+            # Create green badge for passing coverage
+            curl "https://img.shields.io/badge/coverage-${COVERAGE}%25-brightgreen" > "./coverage/badges/coverage.svg"
+          fi
         else
           echo "No coverage data found - skipping badge generation"
           exit 1
@@ -86,20 +79,14 @@ jobs:
 
     - name: Update README with coverage
       if: github.ref == 'refs/heads/main' && matrix.node-version == '20.x'
-      # Remove dependency on previous step success
       continue-on-error: true
       run: |
-        # Only proceed if coverage data exists
         if [ -f coverage/coverage-summary.json ]; then
-          # Get coverage percentages
-          COVERAGE=$(cat coverage/coverage-summary.json)
-          STATEMENTS=$(echo $COVERAGE | jq -r '.total.statements.pct')
-          BRANCHES=$(echo $COVERAGE | jq -r '.total.branches.pct')
-          FUNCTIONS=$(echo $COVERAGE | jq -r '.total.functions.pct')
-          LINES=$(echo $COVERAGE | jq -r '.total.lines.pct')
+          # Get total coverage percentage
+          COVERAGE=$(cat coverage/coverage-summary.json | jq -r '.total.lines.pct')
           
-          # Update README.md with coverage badges, including status
-          sed -i '/<!-- coverage-start -->/,/<!-- coverage-end -->/c\<!-- coverage-start -->\n![Statements](coverage/badges/badge-statements-'"$([ $(echo "$STATEMENTS < 80" | bc -l) ] && echo 'failing' || echo 'passing')"'.svg)\n![Branches](coverage/badges/badge-branches-'"$([ $(echo "$BRANCHES < 80" | bc -l) ] && echo 'failing' || echo 'passing')"'.svg)\n![Functions](coverage/badges/badge-functions-'"$([ $(echo "$FUNCTIONS < 80" | bc -l) ] && echo 'failing' || echo 'passing')"'.svg)\n![Lines](coverage/badges/badge-lines-'"$([ $(echo "$LINES < 80" | bc -l) ] && echo 'failing' || echo 'passing')"'.svg)\n<!-- coverage-end -->' README.md
+          # Update README.md with single coverage badge using absolute path
+          sed -i '/<!-- coverage-start -->/,/<!-- coverage-end -->/c\<!-- coverage-start -->\n![Coverage](/coverage/badges/coverage.svg)\n<!-- coverage-end -->' README.md
         else
           echo "No coverage data found - skipping README update"
           exit 1
