@@ -1,4 +1,4 @@
-import { SchemaType } from "@google/generative-ai";
+import { SchemaType } from '@google/generative-ai';
 export declare const fileModificationSchema: {
     description: string;
     type: SchemaType;

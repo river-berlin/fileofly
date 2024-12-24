@@ -12,6 +12,9 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
  * @throws {Error} If file modification execution fails
  * @returns {Promise<void>}
  */
-declare function applyFileModification(text: string, customGenAI?: GoogleGenerativeAI): Promise<void>;
+declare function applyFileModification(
+    text: string,
+    customGenAI?: GoogleGenerativeAI,
+): Promise<void>;
 
 export { applyFileModification };
