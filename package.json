@@ -85,6 +85,12 @@
             "!src/**/*.d.ts",
             "!src/**/*.test.{js,ts}",
             "!src/**/__tests__/**"
+        ],
+        "coverageReporters": [
+            "json-summary",
+            "json",
+            "lcov",
+            "text"
         ]
     }
 }
