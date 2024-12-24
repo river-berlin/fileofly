@@ -2,14 +2,6 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { generateFileModification } from '../src/utils/jsonGeneration';
 import { createMockGenerativeAI } from './mocks/setupMocks';
 import { jest } from '@jest/globals';
-import dotenv from 'dotenv';
-
-beforeAll(() => {
-    dotenv.config();
-    if (!process.env.GEMINI_API_KEY) {
-        throw new Error('GEMINI_API_KEY is not set in .env file');
-    }
-});
 
 describe('JSON Generation Tests', () => {
     let mockGenAI: GoogleGenerativeAI;
@@ -143,14 +135,16 @@ describe('JSON Generation Tests', () => {
             endLine: 1,
         };
 
-        // Create a mock response
+        // Create a mock response and spy on the real GoogleGenerativeAI
         const mockGenAI = createMockGenerativeAI(JSON.stringify(expectedResponse));
-        const mockGenerateContent = mockGenAI.getGenerativeModel({
-            model: 'gemini-2.0-flash-exp',
-            generationConfig: {
-                responseMimeType: 'application/json',
-            },
-        }).generateContent;
+        jest.spyOn(GoogleGenerativeAI.prototype, 'getGenerativeModel').mockImplementation(() => 
+            mockGenAI.getGenerativeModel({
+                model: 'gemini-2.0-flash-exp',
+                generationConfig: {
+                    responseMimeType: 'application/json',
+                },
+            })
+        );
 
         // Pass null as the GenAI instance
         const result = await generateFileModification(
@@ -159,6 +153,6 @@ describe('JSON Generation Tests', () => {
         );
 
         expect(result).toEqual(expectedResponse);
-        expect(mockGenerateContent).not.toHaveBeenCalled();
+        expect(GoogleGenerativeAI.prototype.getGenerativeModel).toHaveBeenCalled();
     });
 });

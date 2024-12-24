@@ -13,7 +13,6 @@ let applyFileModification: (text: string, customGenAI?: GoogleGenerativeAI) => P
     ) => Promise<FileModification>,
     executeFileModification: (modification: FileModification) => Promise<void>,
     fileModificationSchema: Record<string, unknown>;
-let dotenv: typeof import('dotenv');
 
 // Load environment variables and imports before tests run
 beforeAll(async () => {
@@ -23,15 +22,6 @@ beforeAll(async () => {
         executeFileModification,
         fileModificationSchema,
     } = await import('../src/index'));
-    dotenv = await import('dotenv');
-
-    // Load environment variables
-    dotenv.config();
-
-    // Verify API key is loaded
-    if (!process.env.GEMINI_API_KEY) {
-        throw new Error('GEMINI_API_KEY is not set in .env file');
-    }
 });
 
 describe('File Modification Tests', () => {
