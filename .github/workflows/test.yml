@@ -42,6 +42,17 @@ jobs:
         echo "github.ref: ${{ github.ref }}"
         echo "matrix.node-version: ${{ matrix.node-version }}"
 
+    - name: Debug coverage file
+      run: |
+        echo "Checking for coverage file..."
+        ls -la coverage/ || echo "Coverage directory does not exist"
+        if [ -f coverage/coverage-summary.json ]; then
+          echo "Coverage file exists"
+          cat coverage/coverage-summary.json
+        else
+          echo "Coverage file does not exist"
+        fi
+
     - name: Generate coverage badges
       if: github.ref == 'refs/heads/main' && matrix.node-version == '20.x'
       # Remove dependency on previous step success
