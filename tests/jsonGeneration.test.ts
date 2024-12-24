@@ -137,13 +137,13 @@ describe('JSON Generation Tests', () => {
 
         // Create a mock response and spy on the real GoogleGenerativeAI
         const mockGenAI = createMockGenerativeAI(JSON.stringify(expectedResponse));
-        jest.spyOn(GoogleGenerativeAI.prototype, 'getGenerativeModel').mockImplementation(() => 
+        jest.spyOn(GoogleGenerativeAI.prototype, 'getGenerativeModel').mockImplementation(() =>
             mockGenAI.getGenerativeModel({
                 model: 'gemini-2.0-flash-exp',
                 generationConfig: {
                     responseMimeType: 'application/json',
                 },
-            })
+            }),
         );
 
         // Pass null as the GenAI instance
