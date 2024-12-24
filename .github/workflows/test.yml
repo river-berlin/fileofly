@@ -82,10 +82,15 @@ jobs:
       continue-on-error: true
       run: |
         if [ -f coverage/coverage-summary.json ]; then
-          # Get total coverage percentage
-          COVERAGE=$(cat coverage/coverage-summary.json | jq -r '.total.lines.pct')
-          
-          sed -i '/<!-- coverage-start -->/,/<!-- coverage-end -->/c\<!-- coverage-start -->[![Coverage](/coverage/badges/coverage.svg)](#)<!-- coverage-end -->' README.md
+          node -e '
+            const fs = require("fs");
+            const readme = fs.readFileSync("README.md", "utf8");
+            const newContent = readme.replace(
+              /<!-- coverage-start -->[\s\S]*?<!-- coverage-end -->/,
+              `<!-- coverage-start -->\n[![Coverage](/coverage/badges/coverage.svg)](#)\n<!-- coverage-end -->`
+            );
+            fs.writeFileSync("README.md", newContent);
+          '
         else
           echo "No coverage data found - skipping README update"
           exit 1

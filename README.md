@@ -7,7 +7,9 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-4.5+-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 [![Build Status](https://github.com/river-berlin/fileofy/actions/workflows/test.yml/badge.svg)](https://github.com/river-berlin/fileofy/actions/workflows/test.yml)
-<!-- coverage-start -->[![Coverage](/coverage/badges/coverage.svg)](#)<!-- coverage-end -->
+<!-- coverage-start -->
+[![Coverage](/coverage/badges/coverage.svg)](#)
+<!-- coverage-end -->
 
 A TypeScript library that uses Google's Gemini AI to interpret text instructions and perform file modifications. The library can create, update, or delete files based on natural language input.
 
