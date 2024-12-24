@@ -37,11 +37,17 @@ jobs:
       continue-on-error: true
       run: npm test
 
+    - name: Debug conditions
+      run: |
+        echo "github.ref: ${{ github.ref }}"
+        echo "matrix.node-version: ${{ matrix.node-version }}"
+
     - name: Generate coverage badges
       if: github.ref == 'refs/heads/main' && matrix.node-version == '20.x'
       # Remove dependency on previous step success
       continue-on-error: true
       run: |
+        echo "Condition passed - running coverage badge generation"
         # Only proceed if coverage data exists
         if [ -f coverage/coverage-summary.json ]; then
           npm install -g jest-coverage-badges
