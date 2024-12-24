@@ -1,4 +1,3 @@
-import { mockWriteFile, mockReadFile, mockUnlink, mockFs } from './fsMocks.ts';
-import { createMockGenerativeAI } from './googleAiMocks.ts';
+import { createMockGenerativeAI } from './googleAiMocks';
 
-export { mockWriteFile, mockReadFile, mockUnlink, mockFs, createMockGenerativeAI };
+export { createMockGenerativeAI };

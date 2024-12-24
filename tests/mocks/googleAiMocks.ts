@@ -1,3 +1,4 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { jest } from '@jest/globals';
 
 // Define the response type
@@ -17,7 +18,7 @@ export const createMockGenerativeAI = (mockedResponse: string = '{}') => {
     getGenerativeModel: jest.fn().mockImplementation(() => ({
       generateContent
     }))
-  };
+  } as unknown as GoogleGenerativeAI;
 };
 
 // Export the SchemaType constants

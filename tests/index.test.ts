@@ -1,16 +1,21 @@
 // Import mock-fs instead of custom mock
 import mock from 'mock-fs';
 import fs from 'fs';
-import { createMockGenerativeAI } from './mocks/setupMocks.ts';
+import { createMockGenerativeAI } from './mocks/setupMocks';
 import { jest }  from '@jest/globals';
 
 // Declare variables that will hold the imported modules
-let applyFileModification: any;
+let applyFileModification: any, generateFileModification: any, executeFileModification: any, fileModificationSchema: any;
 let dotenv: any;
 
 // Load environment variables and imports before tests run
 beforeAll(async () => {
-  ({ applyFileModification } = await import('../src/index.ts'));
+  ({ 
+    applyFileModification, 
+    generateFileModification, 
+    executeFileModification, 
+    fileModificationSchema 
+  } = await import('../src/index'));
   dotenv = await import('dotenv');
 
   // Load environment variables
@@ -135,5 +140,17 @@ describe('File Modification Tests', () => {
     await expect(
       applyFileModification('Create a file starting at line 2', mockGenAI)
     ).rejects.toThrow('Create operation must start at line 1');
+  });
+
+  test('should export generateFileModification function', () => {
+    expect(typeof generateFileModification).toBe('function');
+  });
+
+  test('should export executeFileModification function', () => {
+    expect(typeof executeFileModification).toBe('function');
+  });
+
+  test('should export fileModificationSchema object', () => {
+    expect(typeof fileModificationSchema).toBe('object');
   });
 }); 
